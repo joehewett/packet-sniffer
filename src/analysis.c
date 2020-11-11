@@ -30,7 +30,11 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
   printf("RST FLAG is %u\n", tcp_header->rst);
   printf("FIN FLAG is %u\n", tcp_header->fin);
   printf("RES1 FLAG is %u\n", tcp_header->res1);
-  
+  printf(
+        "Sender:      %02X:%02X:%02X:%02X:%02X:%02X\n",
+        tcp_header->source[0],tcp_header->source[1],tcp_header->source[2],tcp_header->source[3],
+    );
+
   printf("TCP Source %u\n", ntohs(tcp_header->source));
   printf("TCP Dest %u\n", ntohs(tcp_header->dest));
 }
