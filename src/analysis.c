@@ -9,7 +9,7 @@
 void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbose) {
   // TODO your part 2 code here
   
-  struct ether_header * eth_header = (struct ether_header *) header;
+  struct ether_header * eth_header = (struct ether_header *) packet;
   unsigned short ethernet_type = ntohs(eth_header->ether_type);
   unsigned short ethernet_desthost = ntohs(eth_header->ether_dhost);
   unsigned short ethernet_sourcehost = ntohs(eth_header->ether_shost);
@@ -17,7 +17,7 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
   printf("Ethernet Dest Host 1: %u\n", (unsigned int)ethernet_desthost);
   printf("Ethernet Source Host: %u\n", (unsigned int)ethernet_sourcehost);
 
-  struct tcphdr * tcp_header = (struct tcphdr *) header; 
+  struct tcphdr * tcp_header = (struct tcphdr *) packet + sizeof(eth_header); 
   //unsigned short syn_bit = ntohs(tcp_header->syn);
   printf("SYN FLAG is %u\n", tcp_header->syn);
   printf("ACK FLAG is %u\n", tcp_header->ack);
