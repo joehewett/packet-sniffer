@@ -19,7 +19,7 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
 
   struct tcphdr * tcp_header = (struct tcphdr *) header; 
   //unsigned short syn_bit = ntohs(tcp_header->syn);
-  printf("SYN FLAG is %u\n", tcp_header->th_flags->TH_SYN);
+  printf("SYN FLAG is %u\n", tcp_header->source);
   
 
 }
