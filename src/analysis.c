@@ -14,8 +14,8 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
   unsigned short ethernet_desthost = ntohs(eth_header->ether_dhost);
   unsigned short ethernet_sourcehost = ntohs(eth_header->ether_shost);
   printf("\nEthernet Type: %hu\n", ethernet_type);
-  printf("\nEthernet Type: %hu\n", ethernet_desthost);
-  printf("\nEthernet Type: %hu\n", etherne_sourcehost);
+  printf("\nEthernet Type: %u\n", (unsigned int)ethernet_desthost);
+  printf("\nEthernet Type: %u\n", (unsigned int)ethernet_sourcehost);
 
   struct tcphdr * tcp_header = (struct tcphdr *) header; 
   unsigned short syn_bit = ntohs(tcp_header->syn);
