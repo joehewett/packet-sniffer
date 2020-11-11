@@ -31,5 +31,5 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
   printf("FIN FLAG is %u\n", tcp_header->fin);
   
   printf("TCP Source %u\n", ntohs(tcp_header->source));
-  printf("TCP Dest %u\n", tcp_header->dest);
+  printf("TCP Dest %u\n", ntohs(tcp_header->th_dport));
 }
