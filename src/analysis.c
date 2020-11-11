@@ -29,7 +29,8 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
   printf("ACK FLAG is %u\n", tcp_header->ack);
   printf("RST FLAG is %u\n", tcp_header->rst);
   printf("FIN FLAG is %u\n", tcp_header->fin);
+  printf("RES1 FLAG is %u\n", tcp_header->res1);
   
   printf("TCP Source %u\n", ntohs(tcp_header->source));
-  printf("TCP Dest %u\n", ntohs(tcp_header->th_dport));
+  printf("TCP Dest %u\n", ntohs(tcp_header->dest));
 }
