@@ -14,7 +14,7 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
   printf("\nType: %hu\n", ethernet_type);
 
   struct tdphdr * tcp_header = (struct tcphdr *) header; 
-  unsigned short syn_bit = ntohs(tcp_header->syn);
-  printf("SYN FLAG is %u\n", syn_bit);
+  //unsigned short syn_bit = ntohs(tcp_header->syn);
+  //printf("SYN FLAG is %u\n", syn_bit);
 
 }
