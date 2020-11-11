@@ -17,7 +17,8 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
   printf("Ethernet Dest Host 1: %u\n", (unsigned int)ethernet_desthost);
   printf("Ethernet Source Host: %u\n", (unsigned int)ethernet_sourcehost);
 
-  printf("size of packet = %u\n", sizeof(packet));
+  printf("size of packet = %u\n", packet;
+  printf("size of eth header = %u\n", eth_header;
   struct tcphdr * tcp_header = (struct tcphdr *) packet + sizeof(eth_header); 
   //unsigned short syn_bit = ntohs(tcp_header->syn);
   printf("SYN FLAG is %u\n", tcp_header->syn);
