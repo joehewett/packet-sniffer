@@ -13,9 +13,9 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
   unsigned short ethernet_type = ntohs(eth_header->ether_type);
   unsigned short ethernet_desthost = ntohs(eth_header->ether_dhost);
   unsigned short ethernet_sourcehost = ntohs(eth_header->ether_shost);
-  printf("\nEthernet Type: %hu\n", ethernet_type);
-  printf("\nEthernet Dest Host 1: %u\n", (unsigned int)ethernet_desthost);
-  printf("\nEthernet Source Host: %u\n", (unsigned int)ethernet_sourcehost);
+  printf("Ethernet Type: %hu\n", ethernet_type);
+  printf("Ethernet Dest Host 1: %u\n", (unsigned int)ethernet_desthost);
+  printf("Ethernet Source Host: %u\n", (unsigned int)ethernet_sourcehost);
 
   struct tcphdr * tcp_header = (struct tcphdr *) packet; 
   //unsigned short syn_bit = ntohs(tcp_header->syn);
@@ -24,5 +24,6 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
   printf("RST FLAG is %u\n", tcp_header->rst);
   printf("FIN FLAG is %u\n", tcp_header->fin);
   
-
+  printf("TCP Source %u\n", tcp_header->source);
+  printf("TCP Dest %u\n", tcp_header->dest);
 }
