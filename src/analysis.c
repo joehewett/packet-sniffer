@@ -19,7 +19,7 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
 
   printf("size of packet = %u\n", (unsigned int)packet);
   printf("size of eth header = %u\n", (unsigned int)eth_header);
-  struct tcphdr * tcp_header = (struct tcphdr *) packet + sizeof(eth_header); 
+  struct tcphdr * tcp_header = (struct tcphdr *) packet + ETH_HLEN; 
   //unsigned short syn_bit = ntohs(tcp_header->syn);
   printf("SYN FLAG is %u\n", tcp_header->syn);
   printf("ACK FLAG is %u\n", tcp_header->ack);
