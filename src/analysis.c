@@ -6,35 +6,57 @@
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 
+int syn_count; 
+
 void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbose) {
-  // TODO your part 2 code here
   
-  struct ether_header * eth_header = (struct ether_header *) packet;
-  unsigned short ethernet_type = ntohs(eth_header->ether_type);
-  unsigned short ethernet_desthost = ntohs((unsigned int)eth_header->ether_dhost);
-  unsigned short ethernet_sourcehost = ntohs((unsigned int)eth_header->ether_shost);
-  printf("Ethernet Type: %hu\n", ethernet_type);
-  printf("Ethernet Dest Host 1: %u\n", (unsigned int)ethernet_desthost);
-  printf("Ethernet Source Host: %u\n", (unsigned int)ethernet_sourcehost);
+    // Lengths of the headers so we can find the next headers
+    int eth_header_length = ETH_HLEN; 
+    int ip_header_length; 
+    int tcp_header_length;
+    int payload_length; 
 
-  printf("size of packet = %u\n", (unsigned int)packet);
+    // Pointers to the start of the headers we're interested in
+    const unsigned char *eth_header_ptr = packet;
+    const unsigned char *ip_header_ptr = packet + eth_header_length;
+    const unsigned char *tcp_header_ptr; 
+    const unsigned char *payload_ptr;
 
-  const unsigned char *payload = packet + ETH_HLEN;
+    // ip header length is contained in the second-half of the first byte of the ip_header
+    // So bitwise logical AND with 00001111 to wipe any preceding bits in the byte
+    ip_header_length = ((*ip_header_ptr) & 0x0F); 
+    // IHL is stored in 32 bit segments so multiply by 4 to get the byte count
+    ip_header_length = ip_header_length * 4;
+    printf("IP header length in bytes: %d\n", ip_header_length);
+    printf("IP header point: %u\n", ip_header_ptr);
 
-  printf("tcp pointer = %u\n", (unsigned int)payload);
+    // If the protocol isn't TCP, then we're not interested in this packet 
+    u_char protocol = *(ip_header_ptr + 9);
+    if (protocol != IPPROTO_TCP) {
+        printf("Protocol is not TCP. Skipping.\n\n");
+        return;
+    }
+    // TCP header is after ethernet header (14 bytes) and ip header
+    tcp_header_ptr = packet + eth_header_length + ip_header_length; 
+    // The TCP header length is stored in the first half of the 12th byte
+    // Do a bitwise AND with 11110000 then shift the result 4 bits to the right
+    tcp_header_length = ((*(tcp_header_ptr + 12 )) & 0xF0) >> 4;
+    // Same as IP - multiply by 4 to get byte count
+    tcp_header_length = tcp_header_length * 4; 
+    printf("TCP header length in bytes: %d\n", tcp_header_length);
+    printf("TCP header point: %u\n", tcp_header_ptr); 
+    
+    // Use the tcp header pointer to a instantiate a tcphdr struct
+    struct tcphdr * tcp_header = (struct tcphdr *) tcp_header_ptr; 
 
-  struct tcphdr * tcp_header = (struct tcphdr *) payload; 
-  //unsigned short syn_bit = ntohs(tcp_header->syn);
-  printf("SYN FLAG is %u\n", tcp_header->syn);
-  printf("ACK FLAG is %u\n", tcp_header->ack);
-  printf("RST FLAG is %u\n", tcp_header->rst);
-  printf("FIN FLAG is %u\n", tcp_header->fin);
-  printf("RES1 FLAG is %u\n", tcp_header->res1);
-  printf(
-        "Sender:      %02X:%02X:%02X:%02X\n",
-        payload[0],payload[1],payload[2],payload[3]
-    );
+    // Get the syn bit using the tcphdr struct
+    printf("SYN FLAG is %u\n", tcp_header->syn);
 
-  printf("TCP Source %u\n", ntohs(tcp_header->source));
-  printf("TCP Dest %u\n", ntohs(tcp_header->dest));
+    int total_headers_size = eth_header_length + ip_header_length + tcp_header_length;
+    printf("Size of all headers combined: %d bytes\n", total_headers_size);
+    printf("Size of header caplen: %u\n", header->caplen);
+    payload_length = header->caplen - (eth_header_length + ip_header_length + tcp_header_length);
+    printf("Payload size: %d bytes\n", payload_length);
+    payload_ptr = packet + total_headers_size;
+    printf("Memory address where payload begins: %p\n\n", payload_ptr);
 }
