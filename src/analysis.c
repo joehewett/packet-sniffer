@@ -43,20 +43,6 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     tcp_header_ptr = ip_header_ptr + ip_header_length; 
     // The TCP header length is stored in the first half of the 12th byte
     // Do a bitwise AND with 11110000 then shift the result 4 bits to the right
-
-    // if IP is not in the list of IP's which have already sent SYN bits, then add it 
-    int i; 
-    int ip_unique = 1; 
-    for (i = 0; i < syn_ips->used; i++) {
-        if (syn_ips->array[i] == (ip_header->saddr)) { 
-            ip_unique = 0; 
-            break; 
-        } 
-    }
-
-    if (ip_unique) {
-       insertArray(syn_ips, (ip_header->saddr)); 
-    }
     
     tcp_header_length = ((*(tcp_header_ptr + 12 )) & 0xF0) >> 4;
     // Same as IP - multiply by 4 to get byte count
@@ -68,6 +54,12 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     // Get the syn bit using the tcphdr struct
     printf("SYN FLAG is %u\n", tcp_header->syn);
 
+    // If the TCP header has SYN=1 then store it in our dynamic array
+    // On exit, we will iterate over and get unique IPs, but for now store all. 
+    if (tcp_header->syn) {
+        insertArray(syn_ips, ntohs(ip_header->saddr)); 
+    }
+    
     int total_headers_size = eth_header_length + ip_header_length + tcp_header_length;
     printf("Size of all headers combined: %d bytes\n", total_headers_size);
     printf("Size of header caplen: %u\n", header->caplen);

@@ -12,19 +12,42 @@
 
 Array syn_ips; 
 
-int process_syn_packets() {
-    int total = 0; 
-    int i; 
+int getUniqueSynIPs() {
+    int i, k, is_unique, unique_count = 0; 
+    
+    Array unique_syns; 
+    initArray(&unique_syns, 1); 
+
     for (i = 0; i < syn_ips.used; i++) {
-        printf("Unique IP: %d\n", syn_ips.array[i]); 
+        is_unique = 1; 
+        for (k = 0; k < unique_syns.array[k]; k++) {
+            if (unique_syns.array[k] == syn_ips.array[i]) {
+                is_unique = 0;
+                printf("Found an IP k=%d, i=%d that is not unique: %d\n", k, i, syn_ips.array[i]);
+                break; 
+            }
+        }
+        if (is_unique) {
+            insertArray(&unique_syns, syn_ips.array[i]); 
+        }
     }
-    return total;  
+    unique_count = unique_syns.used; 
+    return unique_count;  
 }
 
-void sig_handler(int signo) {
-  printf("\nProcessing before exiting..\n");
-  int unique_syn_count = process_syn_packets();
-  printf("SYN Packets with unique IP: %u\n", unique_syn_count);
+void printStatistics() {
+    int i;
+
+    for (i = 0; i < syn_ips.used; i++) {
+        printf("IP %d = %d\n", i, syn_ips.array[i]); 
+    }
+    printf("Nubmer of SYN packets with unique IPs: %d\n", getUniqueSynIPs());
+
+}
+
+
+void sigHandler(int signo) {
+  printStatistics(); 
   freeArray(&syn_ips);
   exit(0); 
 }
@@ -34,7 +57,7 @@ void sniff(char *interface, int verbose) {
   initArray(&syn_ips, 5); 
 
   // Create signal handler to catch Ctrl+C so we can process packets
-  if (signal(SIGINT, sig_handler) == SIG_ERR) {
+  if (signal(SIGINT, sigHandler) == SIG_ERR) {
     printf("Error creating signal handler");
   }
   // Open network interface for packet capture
