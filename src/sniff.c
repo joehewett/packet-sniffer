@@ -1,5 +1,4 @@
 #include "sniff.h"
-#include "growingarray.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,33 +8,30 @@
 #include <unistd.h>
 
 #include "dispatch.h"
+#include "growingarray.h"
 
-struct unique_ips {
-    size_t size;
-    int value[];
-};
+Array syn_ips; 
 
 int process_syn_packets() {
-    return 1; 
+    int total = 0; 
+    int i; 
+    for (i = 0; i < syn_ips.used; i++) {
+        printf("Unique IP: %d\n", syn_ips.array[i]); 
+    }
+    return total;  
 }
 
 void sig_handler(int signo) {
   printf("\nProcessing before exiting..\n");
   int unique_syn_count = process_syn_packets();
   printf("SYN Packets with unique IP: %u\n", unique_syn_count);
+  freeArray(&syn_ips);
   exit(0); 
 }
 
 // Application main sniffing loop
 void sniff(char *interface, int verbose) {
-  int i; 
-  //Array syn_ips; 
-  //for (i = 0; i < syn_ips.used; i++) {
-  //    printf("Array entry %d is: %d\n", i, syn_ips.array[i]);
-  //}
-  //printf("In sniff\n");
-
-  //freeArray(&syn_ips);
+  initArray(&syn_ips, 5); 
 
   // Create signal handler to catch Ctrl+C so we can process packets
   if (signal(SIGINT, sig_handler) == SIG_ERR) {
@@ -67,7 +63,7 @@ void sniff(char *interface, int verbose) {
         dump(packet, header.len);
       }
       // Dispatch packet for processing
-      dispatch(&header, packet, verbose);
+      dispatch(&header, packet, verbose, &syn_ips);
     }
   }
 }

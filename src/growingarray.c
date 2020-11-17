@@ -20,7 +20,7 @@ void insertArray(Array *a, int element) {
     a->array = realloc(a->array, a->size * sizeof(int));
   }
   a->array[a->used++] = element;
-  printf("Inserting into array...\n");
+  //printf("Inserting into array...\n");
 }
 
 void freeArray(Array *a) {

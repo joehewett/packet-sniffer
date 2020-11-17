@@ -1,4 +1,5 @@
 #include "analysis.h"
+#include "growingarray.h"
 
 #include <pcap.h>
 #include <netinet/if_ether.h>
@@ -6,7 +7,7 @@
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 
-void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbose) {
+void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbose, Array *syn_ips) {
     // TODO:
     // When a packet has SYN=1, add it and the IP to the dynamically growing array
 
@@ -37,7 +38,7 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     ip_header_length = ip_header_length * 4;
 
     struct iphdr * ip_header = (struct iphdr *) ip_header_ptr;
-    ip_header_length = ip_header->ihl * 4;
+    ip_header_length = (ip_header->ihl) * 4;
     // TCP header is after ethernet header (14 bytes) and ip header
     tcp_header_ptr = ip_header_ptr + ip_header_length; 
     // The TCP header length is stored in the first half of the 12th byte
@@ -46,17 +47,17 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     // if IP is not in the list of IP's which have already sent SYN bits, then add it 
     int i; 
     int ip_unique = 1; 
-    //for (i = 0; i < syn_ips->used; i++) {
-    //    if (syn_ips->array[i] == ip_header->saddr) {
-    //        ip_unique = 0; 
-    //        break; 
-    //   }
-    //}
+    for (i = 0; i < syn_ips->used; i++) {
+        if (syn_ips->array[i] == (ip_header->saddr)) { 
+            ip_unique = 0; 
+            break; 
+        } 
+    }
 
-    //if (ip_unique) {
-    //   insertArray(syn_ips, ip_header->saddr); 
-    //}
-
+    if (ip_unique) {
+       insertArray(syn_ips, (ip_header->saddr)); 
+    }
+    
     tcp_header_length = ((*(tcp_header_ptr + 12 )) & 0xF0) >> 4;
     // Same as IP - multiply by 4 to get byte count
     tcp_header_length = tcp_header_length * 4; 
@@ -73,5 +74,5 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     payload_length = header->caplen - (eth_header_length + ip_header_length + tcp_header_length);
     printf("Payload size: %d bytes\n", payload_length);
     payload_ptr = packet + total_headers_size;
-    printf("Memory address where payload begins: %p\n\n", payload_ptr);
+    //printf("Memory address where payload begins: %p\n\n", payload_ptr);
 }
