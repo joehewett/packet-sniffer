@@ -1,8 +1,7 @@
 #include "dispatch.h"
+#include "analysis.h"
 
 #include <pcap.h>
-
-#include "analysis.h"
 
 void dispatch(struct pcap_pkthdr *header,
               const unsigned char *packet,

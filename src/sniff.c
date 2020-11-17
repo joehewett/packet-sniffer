@@ -1,15 +1,46 @@
 #include "sniff.h"
+#include "growingarray.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <pcap.h>
 #include <netinet/if_ether.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include "dispatch.h"
 
+struct unique_ips {
+    size_t size;
+    int value[];
+};
+
+int process_syn_packets() {
+    return 1; 
+}
+
+void sig_handler(int signo) {
+  printf("\nProcessing before exiting..\n");
+  int unique_syn_count = process_syn_packets();
+  printf("SYN Packets with unique IP: %u\n", unique_syn_count);
+  exit(0); 
+}
 
 // Application main sniffing loop
 void sniff(char *interface, int verbose) {
+  int i; 
+  //Array syn_ips; 
+  //for (i = 0; i < syn_ips.used; i++) {
+  //    printf("Array entry %d is: %d\n", i, syn_ips.array[i]);
+  //}
+  //printf("In sniff\n");
+
+  //freeArray(&syn_ips);
+
+  // Create signal handler to catch Ctrl+C so we can process packets
+  if (signal(SIGINT, sig_handler) == SIG_ERR) {
+    printf("Error creating signal handler");
+  }
   // Open network interface for packet capture
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t *pcap_handle = pcap_open_live(interface, 4096, 1, 0, errbuf);
