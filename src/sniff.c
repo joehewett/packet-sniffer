@@ -10,14 +10,18 @@
 #include "dispatch.h"
 #include "growingarray.h"
 
-Array syn_ips; 
+// Global so that we can access it from the signal handler 
+Array syn_ips;
+Array arp_responses; 
 
 int getUniqueSynIPs() {
     int i, k, is_unique, unique_count = 0; 
     
+    // Create an array that we can store unique IPs in
     Array unique_syns; 
     initArray(&unique_syns, 1); 
 
+    // Iterate over the array of IP addresses and find the uniques. Store unique IPs in unique_syns
     for (i = 0; i < syn_ips.used; i++) {
         is_unique = 1; 
         for (k = 0; k < unique_syns.array[k]; k++) {
@@ -31,35 +35,39 @@ int getUniqueSynIPs() {
             insertArray(&unique_syns, syn_ips.array[i]); 
         }
     }
+
+    // Free up the memory then return the count of unique IPs that sent SYN packets
     unique_count = unique_syns.used; 
+    freeArray(&unique_syns);
     return unique_count;  
 }
 
+// Called in the sigHandler function - prints out SYN/ARP/Blacklist info before exiting
 void printStatistics() {
-    int i;
-
-    for (i = 0; i < syn_ips.used; i++) {
-        printf("IP %d = %d\n", i, syn_ips.array[i]); 
-    }
-    printf("Nubmer of SYN packets with unique IPs: %d\n", getUniqueSynIPs());
-
+    printf("%d SYN packets detected from %d different IPs\n", syn_ips.used, getUniqueSynIPs());
+    printf("%d ARP responses\n", arp_responses.used);
 }
 
-
+// Catch system signals and do some processing prior to exiting 
 void sigHandler(int signo) {
   printStatistics(); 
   freeArray(&syn_ips);
+  freeArray(&arp_responses);
   exit(0); 
 }
 
 // Application main sniffing loop
 void sniff(char *interface, int verbose) {
-  initArray(&syn_ips, 5); 
+  // Initialise the syn_ips and arp arrays with a few slots so that we can add items to it later
+  initArray(&syn_ips, 4); 
+  initArray(&arp_responses, 4);
+
 
   // Create signal handler to catch Ctrl+C so we can process packets
   if (signal(SIGINT, sigHandler) == SIG_ERR) {
     printf("Error creating signal handler");
   }
+  
   // Open network interface for packet capture
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t *pcap_handle = pcap_open_live(interface, 4096, 1, 0, errbuf);
@@ -86,7 +94,7 @@ void sniff(char *interface, int verbose) {
         dump(packet, header.len);
       }
       // Dispatch packet for processing
-      dispatch(&header, packet, verbose, &syn_ips);
+      dispatch(&header, packet, verbose, &syn_ips, &arp_responses);
     }
   }
 }

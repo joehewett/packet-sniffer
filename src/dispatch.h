@@ -7,6 +7,7 @@
 void dispatch(struct pcap_pkthdr *header, 
               const unsigned char *packet,
               int verbose,
-              Array *syn_ips);
+              Array *syn_ips,
+              Array *arp_responses);
 
 #endif

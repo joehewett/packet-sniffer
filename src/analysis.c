@@ -6,8 +6,11 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>
+#include <net/if_arp.h>
 
-void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbose, Array *syn_ips) {
+void print_arp_header(struct ether_arp *header);
+
+void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbose, Array *syn_ips, Array *arp_responses) {
     // TODO:
     // When a packet has SYN=1, add it and the IP to the dynamically growing array
 
@@ -27,8 +30,14 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     // We can get the protocol being used in the packet in the IP header at byte 9
     u_char protocol = *(ip_header_ptr + 9);
     if (protocol != IPPROTO_TCP) {
-        printf("Protocol is not TCP. Skipping.\n\n");
-        return;
+        printf("Protocol is not TCP... Checking if ARP...\n");
+        struct ether_arp * eth_arp_header = (struct ether_arp *) ip_header_ptr;
+        if (ntohs(eth_arp_header->ea_hdr.ar_op) == ARPOP_REPLY) {
+            printf("This is an ARPOP_REPLY");
+            insertArray(arp_responses, 1);
+        }
+        print_arp_header(eth_arp_header);
+        //return;
     }
 
     // ip header length is contained in the second-half of the first byte of the ip_header
@@ -67,4 +76,57 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     printf("Payload size: %d bytes\n", payload_length);
     payload_ptr = packet + total_headers_size;
     //printf("Memory address where payload begins: %p\n\n", payload_ptr);
+
+}
+
+void print_arp_header(struct ether_arp *header)
+{
+    printf("ARP Header:\n");
+    printf("\t ARP OP %d\n", ntohs(header->ea_hdr.ar_op));
+    printf("\tHardware Type: %d\n", ntohs(header->ea_hdr.ar_hrd));
+    printf("\tProtocol Type: %d\n", ntohs(header->ea_hdr.ar_pro));
+    printf("\tHardware Length: %d\n", ntohs(header->ea_hdr.ar_hln));
+    printf("\tProtocol Length: %d\n", ntohs(header->ea_hdr.ar_pln));
+    printf("\tOperation: %d\n", ntohs(header->ea_hdr.ar_op));
+    int i;
+    printf("\tSender Hardware Address: ");
+    for (i = 0; i < ETH_ALEN; ++i)
+    {
+        printf("%d", header->arp_sha[i]);
+        if (i < ETH_ALEN - 1)
+        {
+            printf(":");
+        }
+    }
+
+    printf("\n\tSender Protocol Address: ");
+    for (i = 0; i < 4; ++i)
+    {
+        printf("%d", header->arp_spa[i]);
+        if (i < 3)
+        {
+            printf(":");
+        }
+    }
+
+    printf("\n\tTarget Hardware Address: ");
+    for (i = 0; i < ETH_ALEN; ++i)
+    {
+        printf("%02x", header->arp_tha[i]);
+        if (i < ETH_ALEN - 1)
+        {
+            printf(":");
+        }
+    }
+
+    printf("\n\tTarget Protocol Address: ");
+    for (i = 0; i < 4; ++i)
+    {
+        printf("%d", header->arp_tpa[i]);
+        if (i < 3)
+        {
+            printf(":");
+        }
+    }
+    printf("\n");
 }
