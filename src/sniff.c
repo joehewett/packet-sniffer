@@ -1,18 +1,15 @@
 #include "sniff.h"
 
+#include <pcap.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pcap.h>
 #include <netinet/if_ether.h>
 #include <signal.h>
 #include <unistd.h>
 
 #include "dispatch.h"
+#include "analysis.h"
 #include "growingarray.h"
-
-// Global so that we can access it from the signal handler 
-Array syn_ips;
-Array arp_responses; 
 
 int getUniqueSynIPs() {
     int i, k, is_unique, unique_count = 0; 
@@ -21,18 +18,19 @@ int getUniqueSynIPs() {
     Array unique_syns; 
     initArray(&unique_syns, 1); 
 
+    printf("In exit, used count of syn_counter is %d\n", syn_counter.used);
     // Iterate over the array of IP addresses and find the uniques. Store unique IPs in unique_syns
-    for (i = 0; i < syn_ips.used; i++) {
+    for (i = 0; i < syn_counter.used; i++) {
         is_unique = 1; 
         for (k = 0; k < unique_syns.array[k]; k++) {
-            if (unique_syns.array[k] == syn_ips.array[i]) {
+            if (unique_syns.array[k] == syn_counter.array[i]) {
                 is_unique = 0;
-                printf("Found an IP k=%d, i=%d that is not unique: %d\n", k, i, syn_ips.array[i]);
+                printf("Found an IP k=%d, i=%d that is not unique: %d\n", k, i, syn_counter.array[i]);
                 break; 
             }
         }
         if (is_unique) {
-            insertArray(&unique_syns, syn_ips.array[i]); 
+            insertArray(&unique_syns, syn_counter.array[i]); 
         }
     }
 
@@ -44,29 +42,29 @@ int getUniqueSynIPs() {
 
 // Called in the sigHandler function - prints out SYN/ARP/Blacklist info before exiting
 void printStatistics() {
-    printf("%d SYN packets detected from %d different IPs\n", syn_ips.used, getUniqueSynIPs());
-    printf("%d ARP responses\n", arp_responses.used);
+    //printf("%d SYN packets detected from %d different IPs\n", syn_counter.used, getUniqueSynIPs());
+    //printf("%d ARP responses\n", arp_responses.used);
+    printf("%d SYN packets detected from %d different IPs\n", getUniqueSynIPs());
+    printf("%d ARP responses\n", arp_counter);
+    printf("%d Blacklist responses\n", blacklist_counter);
 }
 
 // Catch system signals and do some processing prior to exiting 
 void sigHandler(int signo) {
     printStatistics(); 
-    freeArray(&syn_ips);
-    freeArray(&arp_responses);
+    freeArray(&syn_counter);
     exit(0); 
 }
 
 
 // Application main sniffing loop
 void sniff(char *interface, int verbose) {
-    // Initialise the syn_ips and arp arrays with a few slots so that we can add items to it later
-    initArray(&syn_ips, 4); 
-    initArray(&arp_responses, 4);
+    // Initialise the syn_counter and arp arrays with a few slots so that we can add items to it later
 
-
+    initialiseSynCounter(); 
     //create the worker threads
-    printf("Creating threads..\n");
-    create_threads(10);
+    //printf("Creating threads..\n");
+    //create_threads(10);
 
 
 
@@ -90,26 +88,25 @@ void sniff(char *interface, int verbose) {
     struct pcap_pkthdr header;
     const unsigned char *packet;
     
-    //while (1) {
-    //    printf("In while loop...\n");
-    //    // Capture a  packet
-    //    packet = pcap_next(pcap_handle, &header);
-    //    if (packet == NULL) {
-    //    // pcap_next can return null if no packet is seen within a timeout
-    //        if (verbose) {
-    //            printf("No packet received. %s\n", pcap_geterr(pcap_handle));
+    while (1) {
+        printf("In while loop...\n");
+        // Capture a  packet
+        packet = pcap_next(pcap_handle, &header);
+        if (packet == NULL) {
+        // pcap_next can return null if no packet is seen within a timeout
+            if (verbose) {
+                printf("No packet received. %s\n", pcap_geterr(pcap_handle));
             }
-    //    } else {
+        } else {
         // Optional: dump raw data to terminal
-    //        if (verbose) {
-    //            dump(packet, header.len);
-    //        }
-    //        // Dispatch packet for processing
-    //        printf("Calling dispatch with packet #### %d ####\n", packet);
-    //        dispatch(&header, packet, verbose, &syn_ips, &arp_responses);
-    //    }
-    //}
-    pcap_loop(pcap_handle, -1, (pcap_handler) dispatch, (u_char*) &verbose);
+            if (verbose) {
+                //dump(packet, header.len);
+            }
+            // Dispatch packet for processing
+            printf("Calling dispatch with packet #### %d ####\n", packet);
+            dispatch(&header, packet, verbose);
+        }
+    }
 }
 
 // Utility/Debugging method for dumping raw packet data

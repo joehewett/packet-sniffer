@@ -39,12 +39,12 @@ void *analyse_packet(void *arg) {
     // Call to analyse with packet 
     // Returns array with 3 entries: SYN, ARP, Blacklist
     // Get a hold of official array and add to it
-    return NULL; 
+    return; 
 }
 
 // Called at runtime to initially create the desired number of threads
 void create_threads(int thread_count) {
-    return NULL;
+    return;
     work_queue = create_queue(); 
     printf("Creating %d initial threads...\n", thread_count);
     
@@ -57,21 +57,19 @@ void create_threads(int thread_count) {
 
 void dispatch(struct pcap_pkthdr *header,
               const unsigned char *packet,
-              int verbose,
-              Array *syn_ips,
-              Array *arp_responses) {
+              int verbose) {
 
     printf("Dispatch has been called\n");
 
-    pthread_mutex_lock(&queue_mutex);
-    printf("Got mutex lock on the queue\n");
-    enqueue(work_queue, packet);
-    printf("Queued the packet %d\n", packet);
-    pthread_cond_signal(&queue_cond);
-    printf("Sent queue condition signal\n");
-    pthread_mutex_unlock(&queue_mutex);
-    printf("Dropped mutex lock on queue");
+    //pthread_mutex_lock(&queue_mutex);
+    //printf("Got mutex lock on the queue\n");
+    //enqueue(work_queue, packet);
+    //printf("Queued the packet %d\n", packet);
+    //pthread_cond_signal(&queue_cond);
+    //printf("Sent queue condition signal\n");
+    //pthread_mutex_unlock(&queue_mutex);
+    //printf("Dropped mutex lock on queue");
 
 
-    //analyse(header, packet, verbose, syn_ips, arp_responses);
+    analyse(header, packet, verbose);
 }

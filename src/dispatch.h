@@ -7,8 +7,6 @@
 void create_threads(int thread_count);
 void dispatch(struct pcap_pkthdr *header, 
               const unsigned char *packet,
-              int verbose,
-              Array *syn_ips,
-              Array *arp_responses);
+              int verbose);
 
 #endif
