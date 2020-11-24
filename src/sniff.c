@@ -44,7 +44,7 @@ int getUniqueSynIPs() {
 void printStatistics() {
     //printf("%d SYN packets detected from %d different IPs\n", syn_counter.used, getUniqueSynIPs());
     //printf("%d ARP responses\n", arp_responses.used);
-    printf("%d SYN packets detected from %d different IPs\n", getUniqueSynIPs());
+    printf("%d SYN packets detected from %d different IPs\n", syn_counter->used, getUniqueSynIPs());
     printf("%d ARP responses\n", arp_counter);
     printf("%d Blacklist responses\n", blacklist_counter);
 }
