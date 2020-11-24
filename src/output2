@@ -1,0 +1,195 @@
+../build/idsniff invoked. Settings:
+	Interface: lo
+	Verbose: 1
+Initialising array
+Initialising array
+Creating threads..
+Creating 10 initial threads...
+Creating thread 0
+Creating thread 1
+Creating thread 2
+Creating thread 3
+Creating thread 4
+Creating thread 5
+Creating thread 6
+Creating thread 7
+Creating thread 8
+Creating thread 9
+SUCCESS! Opened lo for capture
+In while loop...
+In thread function for thread -170038416, acquiring queue lock...
+Queue is empty, thread -170038416 is waiting for queue cond/mutex...
+In thread function for thread -178431120, acquiring queue lock...
+Queue is empty, thread -178431120 is waiting for queue cond/mutex...
+In thread function for thread -186823824, acquiring queue lock...
+Queue is empty, thread -186823824 is waiting for queue cond/mutex...
+In thread function for thread -195216528, acquiring queue lock...
+Queue is empty, thread -195216528 is waiting for queue cond/mutex...
+In thread function for thread -203609232, acquiring queue lock...
+Queue is empty, thread -203609232 is waiting for queue cond/mutex...
+In thread function for thread -212001936, acquiring queue lock...
+Queue is empty, thread -212001936 is waiting for queue cond/mutex...
+In thread function for thread -220394640, acquiring queue lock...
+Queue is empty, thread -220394640 is waiting for queue cond/mutex...
+In thread function for thread -161645712, acquiring queue lock...
+Queue is empty, thread -161645712 is waiting for queue cond/mutex...
+In thread function for thread -153253008, acquiring queue lock...
+Queue is empty, thread -153253008 is waiting for queue cond/mutex...
+In thread function for thread -144860304, acquiring queue lock...
+Queue is empty, thread -144860304 is waiting for queue cond/mutex...
+
+
+ === PACKET 0 HEADER ===
+Source MAC: 00:00:00:00:00:00
+Destination MAC: 00:00:00:00:00:00
+Type: 8
+ === PACKET 0 DATA == 
+45 00 00 a0 15 1e 00 00 40 06 51 16 9e a0 f6 82 7f 00 00 01 | E.......@.Q.........
+06 aa 00 50 52 a1 34 5c 15 29 76 f9 50 02 00 40 cc 37 00 00 | ...PR.4\.)v.P..@.7..
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+Calling dispatch with packet #### 141637728 ####
+Dispatch has been called
+Got mutex lock on the queue
+Queued the packet 141637728
+Sent queue condition signal
+Dropped mutex lock on queueIn while loop...
+
+
+ === PACKET 1 HEADER ===
+Source MAC: 00:00:00:00:00:00
+Destination MAC: 00:00:00:00:00:00
+Type: 8
+ === PACKET 1 DATA == 
+45 00 00 28 00 00 40 00 40 06 3c ce 7f 00 00 01 7f 00 00 01 | E..(..@.@.<.........
+00 50 06 aa 00 00 00 00 52 a1 34 d5 50 14 00 00 0d 3c 00 00 | .P......R.4.P....<..
+Calling dispatch with packet #### 141637728 ####
+Dispatch has been called
+Got mutex lock on the queue
+Queued the packet 141637728
+Sent queue condition signal
+Dropped mutex lock on queueIn while loop...
+Queue has an item in it! thread -170038416 has acquired queue mutex
+The queue elements from head to tail are:
+141637728--> 141637728
+Thread -170038416 has taken an item from the queue for processing, poggers
+Thread -170038416 has released the queue mutex
+The queue elements from head to tail are:
+141637728
+Thread -170038416 would have called anaylse for packet: 141637728
+Queue has an item in it! thread -178431120 has acquired queue mutex
+The queue elements from head to tail are:
+141637728
+Thread -178431120 has taken an item from the queue for processing, poggers
+Thread -178431120 has released the queue mutex
+The queue is empty
+Thread -178431120 would have called anaylse for packet: 141637728
+
+
+ === PACKET 2 HEADER ===
+Source MAC: 00:00:00:00:00:00
+Destination MAC: 00:00:00:00:00:00
+Type: 8
+ === PACKET 2 DATA == 
+45 00 00 a0 f4 b0 00 00 40 06 25 02 b6 3e 2b 66 7f 00 00 01 | E.......@.%..>+f....
+0a a9 00 50 7c 67 01 d1 22 a8 6a 43 50 02 00 40 83 b3 00 00 | ...P|g..".jCP..@....
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+Calling dispatch with packet #### 141637728 ####
+Dispatch has been called
+Got mutex lock on the queue
+Queued the packet 141637728
+Sent queue condition signal
+Dropped mutex lock on queueIn while loop...
+
+
+ === PACKET 3 HEADER ===
+Source MAC: 00:00:00:00:00:00
+Destination MAC: 00:00:00:00:00:00
+Type: 8
+ === PACKET 3 DATA == 
+45 00 00 28 00 00 40 00 40 06 3c ce 7f 00 00 01 7f 00 00 01 | E..(..@.@.<.........
+00 50 0a a9 00 00 00 00 7c 67 02 4a 50 14 00 00 c5 80 00 00 | .P......|g.JP.......
+Calling dispatch with packet #### 141637728 ####
+Dispatch has been called
+Got mutex lock on the queue
+Queued the packet 141637728
+Sent queue condition signal
+Dropped mutex lock on queueIn while loop...
+Queue has an item in it! thread -186823824 has acquired queue mutex
+The queue elements from head to tail are:
+141637728--> 141637728
+Thread -186823824 has taken an item from the queue for processing, poggers
+Thread -186823824 has released the queue mutex
+The queue elements from head to tail are:
+141637728
+Thread -186823824 would have called anaylse for packet: 141637728
+Queue has an item in it! thread -195216528 has acquired queue mutex
+The queue elements from head to tail are:
+141637728
+Thread -195216528 has taken an item from the queue for processing, poggers
+Thread -195216528 has released the queue mutex
+The queue is empty
+Thread -195216528 would have called anaylse for packet: 141637728
+
+
+ === PACKET 4 HEADER ===
+Source MAC: 00:00:00:00:00:00
+Destination MAC: 00:00:00:00:00:00
+Type: 8
+ === PACKET 4 DATA == 
+45 00 00 a0 32 ab 00 00 40 06 3d ee 47 c4 42 fa 7f 00 00 01 | E...2...@.=.G.B.....
+0a aa 00 50 79 29 9e 11 7e 30 63 2c 50 02 00 40 ed 24 00 00 | ...Py)..~0c,P..@.$..
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 | XXXXXXXXXXXXXXXXXXXX
+Calling dispatch with packet #### 141637728 ####
+Dispatch has been called
+Got mutex lock on the queue
+Queued the packet 141637728
+Sent queue condition signal
+Dropped mutex lock on queueIn while loop...
+
+
+ === PACKET 5 HEADER ===
+Source MAC: 00:00:00:00:00:00
+Destination MAC: 00:00:00:00:00:00
+Type: 8
+ === PACKET 5 DATA == 
+45 00 00 28 00 00 40 00 40 06 3c ce 7f 00 00 01 7f 00 00 01 | E..(..@.@.<.........
+00 50 0a aa 00 00 00 00 79 29 9e 8a 50 14 00 00 83 63 00 00 | .P......y)..P....c..
+Calling dispatch with packet #### 141637728 ####
+Dispatch has been called
+Got mutex lock on the queue
+Queued the packet 141637728
+Sent queue condition signal
+Dropped mutex lock on queueIn while loop...
+Queue has an item in it! thread -203609232 has acquired queue mutex
+The queue elements from head to tail are:
+141637728--> 141637728
+Thread -203609232 has taken an item from the queue for processing, poggers
+Thread -203609232 has released the queue mutex
+The queue elements from head to tail are:
+141637728
+Thread -203609232 would have called anaylse for packet: 141637728
+Queue has an item in it! thread -212001936 has acquired queue mutex
+The queue elements from head to tail are:
+141637728
+Thread -212001936 has taken an item from the queue for processing, poggers
+Thread -212001936 has released the queue mutex
+The queue is empty
+Thread -212001936 would have called anaylse for packet: 141637728
+Initialising array
+0 SYN packets detected from 0 different IPs
+0 ARP responses

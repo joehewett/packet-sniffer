@@ -14,6 +14,8 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     // TODO:
     // When a packet has SYN=1, add it and the IP to the dynamically growing array
 
+    printf("In analyse with packet %d\n",packet);
+    return; 
     // Lengths of the headers so we can find the next headers
     int eth_header_length = ETH_HLEN; 
     int ip_header_length; 
@@ -77,7 +79,34 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     payload_ptr = packet + total_headers_size;
     //printf("Memory address where payload begins: %p\n\n", payload_ptr);
 
+
+    // blacklist detections
+    // check TCP headers being sent to port 80
+    // Parse the host web address. If it is www.google.co.uk, flag as malicious 
+
+    
+    int i; 
+    payload_ptr = tcp_header_ptr + tcp_header_length;
+    int data_bytes = payload_length; 
+    const static int output_sz = 20; // Output this many bytes at a time
+    while (data_bytes > 0) {
+        int output_bytes = data_bytes < output_sz ? data_bytes : output_sz;
+        // Print data in ascii form
+        for (i = 0; i < data_bytes; ++i) {
+            char byte = payload_ptr[i];
+            if (byte > 31 && byte < 127) {
+                // Byte is in printable ascii range
+                printf("%c", byte);
+            } else {
+                printf(".");
+            }
+        }
+        printf("\n");
+        payload_ptr += output_bytes;
+        data_bytes -= output_bytes;
+    }
 }
+
 
 void print_arp_header(struct ether_arp *header)
 {
