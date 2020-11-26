@@ -7,25 +7,25 @@
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 #include <net/if_arp.h>
+#include <pthread.h>
 
-Array syn_counter; 
-volatile int arp_counter;
-volatile int blacklist_counter; 
+Array syn_counter;              // Array to store IP of packets with SYN bits
+volatile int arp_counter;       // Global volatile (can be changed at any time) counter for ARP poisoning detection
+volatile int blacklist_counter; // Global volatile counter for blacklist violations  
 
-void print_arp_header(struct ether_arp *header);
+pthread_mutex_t counters_lock = PTHREAD_MUTEX_INITIALIZER; // Mutex to lock global counters before we update them to stop race conditions 
 
-void initialiseSynCounter() {
-    initArray(&syn_counter, 4);
-}
+void analyse(const unsigned char *packet, int verbose) {
 
-
-void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbose) {
+    // We can't just update on the fly because multithreading so update these booleans and do it when we get mutex
+    int is_syn_attack = 0;  
+    int is_arp_attack = 0;  
+    int is_blacklist_attack = 0;
 
     // Lengths of the headers so we can find the next headers
     int eth_header_length = ETH_HLEN; 
     int ip_header_length; 
     int tcp_header_length;
-    int payload_length; 
 
     // Pointers to the start of the headers we're interested in
     const unsigned char *ip_header_ptr = packet + eth_header_length;
@@ -40,123 +40,63 @@ void analyse(struct pcap_pkthdr *header, const unsigned char *packet, int verbos
     // If the protocol isn't TCP, then we're not interested in this packet unless its ARP
     // We can get the protocol being used in the packet in the IP header at byte 9
     // ip_header->protocol is equal to *(ip_header_ptr + 9); i.e. byte 9 of IP header
-    // Or we can just use 
     ip_header = (struct iphdr *) ip_header_ptr;
     ip_header_length = (ip_header->ihl) * 4;
 
+    // ## ARP POISONING ## // 
     if (ip_header->protocol != IPPROTO_TCP) {
         eth_arp_header = (struct ether_arp *) ip_header_ptr;
         if (ntohs(eth_arp_header->ea_hdr.ar_op) == ARPOP_REPLY) {
-            //insertArray(arp_responses, 1);
-            arp_counter++;
+            is_arp_attack = 1; 
         }
-        return; // We're not going to get anything useful out of this packet if its not TCP
     }
 
-    // Use the tcp header pointer to a instantiate a tcphdr struct
+    // ## SYN FLOODING ## // 
     if (ip_header->protocol == IPPROTO_TCP) {
-        // TCP header is after ethernet header (14 bytes) and ip header
+        //printf("   TCP Packet found\n ");
+        // TCP header is after ethernet header (14 bytes) and ip header (variable length)
         tcp_header_ptr = ip_header_ptr + ip_header_length; 
         tcp_header = (struct tcphdr *) tcp_header_ptr; 
 
-        // The TCP header length is stored in the first half of the 12th byte
-        // Do a bitwise AND with 11110000 then shift the result 4 bits to the right
-        // There is probably an easier way of doing this but this one makes me feel like a real programmer
-        tcp_header_length = ((*(tcp_header_ptr + 12 )) & 0xF0) >> 4;
-        // Same as IP - multiply by 4 to get byte count
-        tcp_header_length = tcp_header_length * 4; 
+        // The TCP header length is stored in the first half of the 12th byte so we could do a bitwise AND with 11110000 then shift the result 4 bits to the right
+        // tcp_header_length = ((*(tcp_header_ptr + 12 )) & 0xF0) >> 4; // But tcphdr gives us doff, so we can just use that 
+        tcp_header_length = tcp_header->doff * 4;
 
         int total_headers_size = eth_header_length + ip_header_length + tcp_header_length;
+        //printf("ipheader ptr = %d, tcp_header_ptr = %d, Total header length is: %d\n", ip_header_ptr, tcp_header_ptr, total_headers_size);
         payload_ptr = packet + total_headers_size;
 
-        // Get the syn bit using the tcphdr struct
-        printf("SYN FLAG is %u\n", tcp_header->syn);
-        if (tcp_header->syn) {
+        if (tcp_header->syn && !tcp_header->ack && !tcp_header->urg && !tcp_header->psh && !tcp_header->fin && !tcp_header->rst) {
             // If the TCP header has SYN=1 then store it in our dynamic array
             // On exit, we will iterate over and get unique IPs, but for now store all. 
-            insertArray(&syn_counter, ntohs(ip_header->saddr)); 
+            is_syn_attack = 1; 
         }
     }
 
-    payload_length = header->caplen - (eth_header_length + ip_header_length + tcp_header_length);
-    printf("Payload length is %d\n",payload_length);
-
-    // Check blacklist for google.co.uk 
-    if (ip_header->protocol == IPPROTO_TCP && payload_length > 0) {
-        printf(" # tcp_header->dest = %d\n", ntohs(tcp_header->dest));
+    // ## BLACKLIST VIOLATIONS ## // 
+    if (ip_header->protocol == IPPROTO_TCP && payload_ptr != NULL) {
         if (ntohs(tcp_header->dest) == 80) {
-            printf(" # dest is port 80 \n");
             unsigned char *line;
+            // We want to check that the host line is the one containing www.google.co.uk
             line = strstr(payload_ptr, "Host:");
             if (line != NULL) {
-                printf(" # EEZ \n");
-                if (strstr(line, "google.co.uk") != NULL) {
-                    printf("MALICIOUS HTML FOUND");
-                    blacklist_counter++;
-                } else {
-                    printf("MALCIOUS HTML NOT FOUND");
-                }
+                if (strstr(line, "www.google.co.uk") != NULL) {
+                    is_blacklist_attack = 1;
+                } 
             }
         }
     }
+
+    // Lock off the global counters before we update them to stop race conditions
+    pthread_mutex_lock(&counters_lock);
+        if (is_blacklist_attack) { blacklist_counter++; }
+        if (is_arp_attack)       { arp_counter++; } 
+        if (is_syn_attack)       { array_add(&syn_counter, ntohs(ip_header->saddr)); }
+    pthread_mutex_unlock(&counters_lock);
 }
 
-    
-    //printf("Size of all headers combined: %d bytes\n", total_headers_size);
-    //printf("Size of header caplen: %u\n", header->caplen);
-    //printf("Payload size: %d bytes\n", payload_length);
-    //printf("Memory address where payload begins: %p\n\n", payload_ptr);
-
-
-
-void print_arp_header(struct ether_arp *header)
-{
-    printf("ARP Header:\n");
-    printf("\t ARP OP %d\n", ntohs(header->ea_hdr.ar_op));
-    printf("\tHardware Type: %d\n", ntohs(header->ea_hdr.ar_hrd));
-    printf("\tProtocol Type: %d\n", ntohs(header->ea_hdr.ar_pro));
-    printf("\tHardware Length: %d\n", ntohs(header->ea_hdr.ar_hln));
-    printf("\tProtocol Length: %d\n", ntohs(header->ea_hdr.ar_pln));
-    printf("\tOperation: %d\n", ntohs(header->ea_hdr.ar_op));
-    int i;
-    printf("\tSender Hardware Address: ");
-    for (i = 0; i < ETH_ALEN; ++i)
-    {
-        printf("%d", header->arp_sha[i]);
-        if (i < ETH_ALEN - 1)
-        {
-            printf(":");
-        }
-    }
-
-    printf("\n\tSender Protocol Address: ");
-    for (i = 0; i < 4; ++i)
-    {
-        printf("%d", header->arp_spa[i]);
-        if (i < 3)
-        {
-            printf(":");
-        }
-    }
-
-    printf("\n\tTarget Hardware Address: ");
-    for (i = 0; i < ETH_ALEN; ++i)
-    {
-        printf("%02x", header->arp_tha[i]);
-        if (i < ETH_ALEN - 1)
-        {
-            printf(":");
-        }
-    }
-
-    printf("\n\tTarget Protocol Address: ");
-    for (i = 0; i < 4; ++i)
-    {
-        printf("%d", header->arp_tpa[i]);
-        if (i < 3)
-        {
-            printf(":");
-        }
-    }
-    printf("\n");
+// Function that can be called in sniff to initialise our syn counter array
+// Can't be called in analyse because it will overwrite every call
+void initialise_syn_counter() {
+    array_create(&syn_counter, 4);
 }

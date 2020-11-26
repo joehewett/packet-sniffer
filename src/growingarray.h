@@ -13,8 +13,8 @@ struct Array {
   size_t size;
 };
 
-void initArray(Array *a, size_t initialSize);
-void insertArray(Array *a, int element);
-void freeArray(Array *a);
+void array_create(Array *a, size_t initialSize);
+void array_add(Array *a, int element);
+void array_delete(Array *a);
 
 #endif
