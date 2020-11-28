@@ -59,6 +59,7 @@ void sniff(char *interface, int verbose) {
             // Dispatch packet for processing
             dispatch(&header, new_packet, verbose);
         }
+        //free(new_packet);
     }
 }
 

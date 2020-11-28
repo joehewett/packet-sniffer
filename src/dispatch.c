@@ -14,27 +14,24 @@ pthread_cond_t queue_cond = PTHREAD_COND_INITIALIZER; // Condition lock that wil
 
 pthread_t tid[THREAD_COUNT]; // Num threads - Would be cool to make this dynamic based on load
 
-int thread_switch; 
+int thread_switch; // Set this to 0 to kill threads 
 
 // Thread function
 void *analyse_packet(void *arg) {
 
     // Get a fresh packet pointer so we can load in the packet from the queue
-    unsigned char *packet_ptr = NULL; 
+    const unsigned char *packet_ptr = NULL; 
 
     // Loop indefinitely 
-    while (1) {
+    while (thread_switch == 1) {
         // Lock the queue 
         pthread_mutex_lock(&queue_mutex);
         // Wait while the queue is empty - when a job gets added we will send a queue cond and wake up the thread
         while (isempty(packet_queue)) {  
-            if (thread_switch == 0) {
-                break; 
+            if (!thread_switch) {
+                return NULL; 
             }
             pthread_cond_wait(&queue_cond, &queue_mutex);
-        }
-        if (thread_switch == 0) {
-            break; 
         }
 
         // Get the packet from the queue that just got added
@@ -61,17 +58,13 @@ void create_threads(int thread_count) {
 }
 
 // Called from sniff when we get a packet from pcap 
-void dispatch(struct pcap_pkthdr *header,
-              const unsigned char *packet,
-              int verbose) {
-
+void dispatch(struct pcap_pkthdr *header, const unsigned char *packet, int verbose) {
     // Lock the queue before we add the packet
     pthread_mutex_lock(&queue_mutex);
     enqueue(packet_queue, packet);
     // Signal to any waiting threads that a new packet has been added so that they wake up
     // Need to be careful about Spurious Wakeup here. 
     pthread_cond_signal(&queue_cond);
-
     // Drop the queue mutex once we've queued and signaled
     pthread_mutex_unlock(&queue_mutex);
 }
@@ -82,12 +75,13 @@ void sig_handler(int signo) {
 
     pthread_cond_broadcast(&queue_cond);
     // This is where we would join the threads back to main if it was necessary
-    //int i = 0;
-    //for (i = 0; i < THREAD_COUNT; i++) {
-    //    pthread_join(tid[i], NULL);
-    //}
+    int i = 0;
+    for (i = 0; i < THREAD_COUNT; i++) {
+        pthread_kill(tid[i], NULL);
+    }
 
     print_statistics(); 
     array_delete(&syn_counter);
+    free(packet_queue);
     exit(0); 
 }

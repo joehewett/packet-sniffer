@@ -10,6 +10,6 @@ void create_threads(int thread_count);
 void dispatch(struct pcap_pkthdr *header, 
               const unsigned char *packet,
               int verbose);
-void sig_handler(int sig); 
+void sig_handler(int signo); 
 
 #endif
