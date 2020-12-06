@@ -14,7 +14,7 @@ pthread_cond_t queue_cond = PTHREAD_COND_INITIALIZER; // Condition lock that wil
 
 pthread_t tid[THREAD_COUNT]; // Num threads - Would be cool to make this dynamic based on load
 
-int thread_switch; // Set this to 0 to kill threads 
+volatile int thread_switch; 
 
 // Thread function
 void *analyse_packet(void *arg) {
@@ -22,18 +22,26 @@ void *analyse_packet(void *arg) {
     // Get a fresh packet pointer so we can load in the packet from the queue
     const unsigned char *packet_ptr = NULL; 
 
-    // Loop indefinitely 
+    // Loop until we get the signal to die 
     while (thread_switch == 1) {
         // Lock the queue 
         pthread_mutex_lock(&queue_mutex);
-        // Wait while the queue is empty - when a job gets added we will send a queue cond and wake up the thread
+        if (!thread_switch) {
+            return NULL;
+        }
+        // Wait while the queue is empty
+        // Is the thread_switch is 0 but queue is not empty we'll still process the jobs in the queue
         while (isempty(packet_queue)) {  
             if (!thread_switch) {
+                // Unlock our mutex before we leave and broadcast to the other threads to wakeup
+                pthread_mutex_unlock(&queue_mutex);
+                pthread_cond_broadcast(&queue_cond);
                 return NULL; 
             }
+            // Wait for the queue condition to be signalled - this happens when a packet is added the the queue
             pthread_cond_wait(&queue_cond, &queue_mutex);
         }
-
+        //printf("After while loop, processing packet..\n");
         // Get the packet from the queue that just got added
         packet_ptr = packet_queue->head->item;
         dequeue(packet_queue);
@@ -58,29 +66,36 @@ void create_threads(int thread_count) {
 }
 
 // Called from sniff when we get a packet from pcap 
-void dispatch(struct pcap_pkthdr *header, const unsigned char *packet, int verbose) {
-    // Lock the queue before we add the packet
-    pthread_mutex_lock(&queue_mutex);
-    enqueue(packet_queue, packet);
-    // Signal to any waiting threads that a new packet has been added so that they wake up
-    // Need to be careful about Spurious Wakeup here. 
-    pthread_cond_signal(&queue_cond);
-    // Drop the queue mutex once we've queued and signaled
-    pthread_mutex_unlock(&queue_mutex);
+void dispatch(u_char *verbose, struct pcap_pkthdr *header, const unsigned char *packet) {
+    if (thread_switch == 1) {
+        // Lock the queue before we add the packet
+        pthread_mutex_lock(&queue_mutex);
+        enqueue(packet_queue, packet);
+        // Signal to any waiting threads that a new packet has been added so that they wake up
+        // Need to be careful about Spurious Wakeup here. 
+        pthread_cond_signal(&queue_cond);
+        // Drop the queue mutex once we've queued and signaled
+        pthread_mutex_unlock(&queue_mutex);
+    }
 }
 
 // Catch system signals and do some processing prior to exiting 
 void sig_handler(int signo) {
     thread_switch = 0; 
 
-    pthread_cond_broadcast(&queue_cond);
+    // Broadcast to wake up all threads. They will exit their thread functions since thread_switch is 0. 
     // This is where we would join the threads back to main if it was necessary
+    pthread_cond_broadcast(&queue_cond);
     int i = 0;
+    pthread_cond_broadcast(&queue_cond);
     for (i = 0; i < THREAD_COUNT; i++) {
-        pthread_kill(tid[i], NULL);
+        //pthread_cond_broadcast(&queue_cond);
+        pthread_join(tid[i], NULL);
+        //pthread_cond_broadcast(&queue_cond);
     }
 
     print_statistics(); 
+    pcap_close(pcap_handle); 
     array_delete(&syn_counter);
     free(packet_queue);
     exit(0); 

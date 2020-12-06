@@ -1,3 +1,7 @@
+#include "dispatch.h"
+#include "sniff.h"
+#include "analysis.h"
+#include "growingarray.h"
 
 #include <pcap.h>
 #include <stdio.h>
@@ -6,18 +10,15 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "sniff.h"
-#include "dispatch.h"
-#include "analysis.h"
-#include "growingarray.h"
-
-
+pcap_t *pcap_handle; 
+    
 // Application main sniffing loop
 void sniff(char *interface, int verbose) {
 
     // Create the syn_counter array that will be used to store information wrt syn attacks
     initialise_syn_counter(); 
 
+    // Initialise our threads - uses THREAD_COUNT to determine how many we need to create
     create_threads(10);
 
     // Create signal handler to catch Ctrl+C so we can process packets
@@ -28,7 +29,7 @@ void sniff(char *interface, int verbose) {
     
     // Open network interface for packet capture
     char errbuf[PCAP_ERRBUF_SIZE];
-    pcap_t *pcap_handle = pcap_open_live(interface, 4096, 1, 0, errbuf);
+    pcap_handle = pcap_open_live(interface, 4096, 1, 0, errbuf);
 
     if (pcap_handle == NULL) {
         fprintf(stderr, "Unable to open interface %s\n", errbuf);
@@ -37,30 +38,10 @@ void sniff(char *interface, int verbose) {
         printf("SUCCESS! Opened %s for capture\n", interface);
     }
 
-    struct pcap_pkthdr header;
-    const unsigned char *packet;
-    
-    while (1) {
-        // Capture a  packet
-        packet = pcap_next(pcap_handle, &header);
-        unsigned char * new_packet = malloc(header.caplen);
-        memcpy(new_packet, packet, header.caplen);
+    // Once we're done with interface, free it up since strdup is a malloc in disguise
+    free(interface);
 
-        if (packet == NULL) {
-            // pcap_next can return null if no packet is seen within a timeout
-            if (verbose) {
-                printf("No packet received. %s\n", pcap_geterr(pcap_handle));
-            }
-        } else {
-            // Optional: dump raw data to terminal
-            if (verbose) {
-                dump(new_packet, header.len);
-            }
-            // Dispatch packet for processing
-            dispatch(&header, new_packet, verbose);
-        }
-        //free(new_packet);
-    }
+    pcap_loop(pcap_handle, -1, (pcap_handler) dispatch, (u_char *) &verbose);
 }
 
 // Utility/Debugging method for dumping raw packet data

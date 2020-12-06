@@ -5,7 +5,7 @@
 #include <string.h>
 #include <getopt.h>
 
-// An implementation of a growing array  
+// An implementation of a growing array inspired by C Dynamically Growing Array - Casablanca
 
 void array_create(Array *arr, size_t start_size) {
   arr->array = malloc(start_size * sizeof(int));

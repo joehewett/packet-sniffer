@@ -30,7 +30,7 @@ void analyse(const unsigned char *packet, int verbose) {
     // Pointers to the start of the headers we're interested in
     const unsigned char *ip_header_ptr = packet + eth_header_length;
     const unsigned char *tcp_header_ptr;  
-    unsigned char *payload_ptr;
+    unsigned char *payload_ptr; // Giving this const throws some whacky errors later so just dont add it
 
     // Actual structs we're going to use
     struct tcphdr *tcp_header;
@@ -45,7 +45,9 @@ void analyse(const unsigned char *packet, int verbose) {
 
     // ## ARP POISONING ## // 
     if (ip_header->protocol != IPPROTO_TCP) {
+        // Can't be ARP if not TCP, so check TCP first
         eth_arp_header = (struct ether_arp *) ip_header_ptr;
+        // ARPOP_REPLY and info can be found in the ether_arp.h header file and docs
         if (ntohs(eth_arp_header->ea_hdr.ar_op) == ARPOP_REPLY) {
             is_arp_attack = 1; 
         }
@@ -53,7 +55,6 @@ void analyse(const unsigned char *packet, int verbose) {
 
     // ## SYN FLOODING ## // 
     if (ip_header->protocol == IPPROTO_TCP) {
-        //printf("   TCP Packet found\n ");
         // TCP header is after ethernet header (14 bytes) and ip header (variable length)
         tcp_header_ptr = ip_header_ptr + ip_header_length; 
         tcp_header = (struct tcphdr *) tcp_header_ptr; 
@@ -75,6 +76,7 @@ void analyse(const unsigned char *packet, int verbose) {
 
     // ## BLACKLIST VIOLATIONS ## // 
     if (ip_header->protocol == IPPROTO_TCP && payload_ptr != NULL) {
+        // We're only interested in packets at port 80
         if (ntohs(tcp_header->dest) == 80) {
             unsigned char *line;
             // We want to check that the host line is the one containing www.google.co.uk
@@ -91,7 +93,7 @@ void analyse(const unsigned char *packet, int verbose) {
     pthread_mutex_lock(&counters_lock);
         if (is_blacklist_attack) { blacklist_counter++; }
         if (is_arp_attack)       { arp_counter++; } 
-        if (is_syn_attack)       { array_add(&syn_counter, ntohs(ip_header->saddr)); }
+        if (is_syn_attack)       { array_add(&syn_counter, ntohl(ip_header->saddr)); }
     pthread_mutex_unlock(&counters_lock);
 }
 
