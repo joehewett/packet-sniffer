@@ -1,6 +1,8 @@
 #ifndef CS241_SNIFF_H
 #define CS241_SNIFF_H
 
+#include <pcap.h>
+
 extern pcap_t *pcap_handle; 
 
 void sniff(char *interface, int verbose);

@@ -1,7 +1,6 @@
 #include "dispatch.h"
 #include "sniff.h"
 #include "analysis.h"
-#include "growingarray.h"
 
 #include <pcap.h>
 #include <stdio.h>

@@ -30,7 +30,7 @@ void analyse(const unsigned char *packet, int verbose) {
     // Pointers to the start of the headers we're interested in
     const unsigned char *ip_header_ptr = packet + eth_header_length;
     const unsigned char *tcp_header_ptr;  
-    unsigned char *payload_ptr; // Giving this const throws some whacky errors later so just dont add it
+    const unsigned char *payload_ptr; // Giving this const throws some whacky errors later so just dont add it
 
     // Actual structs we're going to use
     struct tcphdr *tcp_header;
@@ -63,7 +63,7 @@ void analyse(const unsigned char *packet, int verbose) {
         // tcp_header_length = ((*(tcp_header_ptr + 12 )) & 0xF0) >> 4; // But tcphdr gives us doff, so we can just use that 
         tcp_header_length = tcp_header->doff * 4;
 
-        int total_headers_size = eth_header_length + ip_header_length + tcp_header_length;
+        const int total_headers_size = eth_header_length + ip_header_length + tcp_header_length;
         //printf("ipheader ptr = %d, tcp_header_ptr = %d, Total header length is: %d\n", ip_header_ptr, tcp_header_ptr, total_headers_size);
         payload_ptr = packet + total_headers_size;
 
@@ -78,9 +78,9 @@ void analyse(const unsigned char *packet, int verbose) {
     if (ip_header->protocol == IPPROTO_TCP && payload_ptr != NULL) {
         // We're only interested in packets at port 80
         if (ntohs(tcp_header->dest) == 80) {
-            unsigned char *line;
+            const char *line;
             // We want to check that the host line is the one containing www.google.co.uk
-            line = strstr(payload_ptr, "Host:");
+            line = strstr((const char *)payload_ptr, "Host:");
             if (line != NULL) {
                 if (strstr(line, "www.google.co.uk") != NULL) {
                     is_blacklist_attack = 1;

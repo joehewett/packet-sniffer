@@ -84,14 +84,11 @@ void sig_handler(int signo) {
     thread_switch = 0; 
 
     // Broadcast to wake up all threads. They will exit their thread functions since thread_switch is 0. 
-    // This is where we would join the threads back to main if it was necessary
-    pthread_cond_broadcast(&queue_cond);
     int i = 0;
     pthread_cond_broadcast(&queue_cond);
+    // Join all threads back to main
     for (i = 0; i < THREAD_COUNT; i++) {
-        //pthread_cond_broadcast(&queue_cond);
         pthread_join(tid[i], NULL);
-        //pthread_cond_broadcast(&queue_cond);
     }
 
     print_statistics(); 
